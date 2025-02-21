@@ -181,6 +181,27 @@ def my_matmul(M, K, N, m, k, n, dtype_in_str, dtype_out_str, trace_size):
                 ),
             )
             object_fifo_link(inB, memB)
+            #input biasing same reference as c ty
+            inD = object_fifo("inD", shim_tile, mem_tile, 2, c_ty) 
+            memD = object_fifo(
+                "memD",
+                mem_tile,
+                compute_tile2,
+                2,
+                c_ty,
+                (
+                    [
+                        (m // r, r * n),
+                        (r, t),
+                        (n // t, r * t),
+                        (t, 1),
+                    ]
+                    if vectorized
+                    else []
+                ),
+            )
+            object_fifo_link(inD, memD)
+
 
             # Output C
             memC = object_fifo("memC", compute_tile2, mem_tile, 2, c_ty)
@@ -216,9 +237,9 @@ def my_matmul(M, K, N, m, k, n, dtype_in_str, dtype_out_str, trace_size):
                 for _ in range_(0xFFFFFFFF):
                     for _ in range_(tiles) if tiles > 1 else range(1):  # issue #1547
 
-                        elem_out = memC.acquire(ObjectFifoPort.Produce, 1)
+                        elem_out = memC.acquire(ObjectFifoPort.Produce, 1) 
                         zero(elem_out)
-
+                        elem_in_bias = memD.acquire(ObjectFifoPort.Consume, 1)
                         for _ in (
                             range_(K_div_k) if K_div_k > 1 else range(1)
                         ):  # issue #1547
@@ -228,6 +249,7 @@ def my_matmul(M, K, N, m, k, n, dtype_in_str, dtype_out_str, trace_size):
                             memA.release(ObjectFifoPort.Consume, 1)
                             memB.release(ObjectFifoPort.Consume, 1)
 
+                        memD.release(ObjectFifoPort.Consume, 1)
                         memC.release(ObjectFifoPort.Produce, 1)
 
             # To/from AIE-array data movement
@@ -236,8 +258,9 @@ def my_matmul(M, K, N, m, k, n, dtype_in_str, dtype_out_str, trace_size):
                 np.ndarray[(A_sz,), np.dtype[dtype_in]],
                 np.ndarray[(B_sz,), np.dtype[dtype_in]],
                 np.ndarray[(C_sz,), np.dtype[dtype_out]],
+                np.ndarray[(C_sz,), np.dtype[dtype_out]],
             )
-            def sequence(A, B, C):
+            def sequence(A, B, C, D):
 
                 if enable_tracing:
                     trace_utils.configure_packet_tracing_aie2(
@@ -295,6 +318,14 @@ def my_matmul(M, K, N, m, k, n, dtype_in_str, dtype_out_str, trace_size):
                             metadata=outC,
                             bd_id=bd_id_base,
                             mem=C,
+                            offsets=[0, 0, 0, C_row_offset],
+                            sizes=[num_tile_rows, N_div_n, m, n],
+                            strides=[m_x_N, n, N, 1],
+                        )
+                        npu_dma_memcpy_nd(
+                            metadata=inD,
+                            bd_id=bd_id_base + 13, 
+                            mem=D,
                             offsets=[0, 0, 0, C_row_offset],
                             sizes=[num_tile_rows, N_div_n, m, n],
                             strides=[m_x_N, n, N, 1],
