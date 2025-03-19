@@ -76,7 +76,7 @@ mlir_target?=build/aie_${target_suffix}.mlir
 mlir_target1?=build/aie_${target_suffix1}.mlir
 trace_mlir_target?=build/aie_trace_${target_suffix}.mlir
 xclbin_target?=build/final_${target_suffix}.xclbin
-new_xclbin?=build/final_${target_suffix}.xclbin
+new_xclbin?=build/final_${target_suffix1}.xclbin
 trace_xclbin_target?=build/trace_${target_suffix}.xclbin
 insts_target?=build/insts_${target_suffix}.txt
 insts_target1?=build/insts_${target_suffix1}.txt
@@ -104,7 +104,7 @@ ${mlir_target}: ${srcdir}/${aie_py_src}
 	python3 $< ${aieargs} --trace_size 0 > $@
 ${mlir_target1}: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-	python3 $< ${aieargs} --trace_size 0 --insts_file ${insts_target1} > $@
+	python3 $< ${aieargs} --trace_size 0 > $@
 
 
 ${trace_mlir_target}: ${srcdir}/${aie_py_src}

@@ -318,40 +318,46 @@ int main(int argc, const char *argv[]) {
 
     //**************** 2 threads ***************/
     //**  Launch first kernel in thread1 */
-    thread1 = std::thread([&]() {
+    // thread1 = std::thread([&]() {
         
-        auto run = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
-        t1_launch = std::chrono::high_resolution_clock::now();
-        r1 = run.wait();
-        t1_done = std::chrono::high_resolution_clock::now();
-        thread1_done = true;
-    });
+    //     auto run = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
+    //     t1_launch = std::chrono::high_resolution_clock::now();
+    //     r1 = run.wait();
+    //     t1_done = std::chrono::high_resolution_clock::now();
+    //     thread1_done = true;
+    // });
     
-    // Launch second kernel in thread2
-    thread2 = std::thread([&]() {
+    // // Launch second kernel in thread2
+    // thread2 = std::thread([&]() {
         
-        auto run2 = kernel1(opcode, bo_instr1, instr_v1.size(), bo_a1, bo_b1, bo_out1);
-        t2_launch = std::chrono::high_resolution_clock::now();
-         r2 = run2.wait();
-        t2_done = std::chrono::high_resolution_clock::now();
-        thread2_done = true;
-    });
+    //     auto run2 = kernel1(opcode, bo_instr1, instr_v1.size(), bo_a1, bo_b1, bo_out1);
+    //     t2_launch = std::chrono::high_resolution_clock::now();
+    //      r2 = run2.wait();
+    //     t2_done = std::chrono::high_resolution_clock::now();
+    //     thread2_done = true;
+    // });
     
-    // // Wait for both threads to complete
-    thread1.join();
-    thread2.join();
+    // // // Wait for both threads to complete
+    // thread1.join();
+    // thread2.join();
     //**************** single thread***************/
     //**single thread launching two kernels :non blocking */
     
-    // auto run = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
-    // t1_launch = std::chrono::high_resolution_clock::now();
+    auto run = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
+    t1_launch = std::chrono::high_resolution_clock::now();
     
-    // auto run2 = kernel1(opcode, bo_instr1, instr_v1.size(), bo_a1, bo_b1, bo_out1);
-    // t2_launch = std::chrono::high_resolution_clock::now();
-    // r1 = run.wait();
-    // t1_done = std::chrono::high_resolution_clock::now();
-    // r2 = run2.wait();
-    // t2_done = std::chrono::high_resolution_clock::now();
+    auto run2 = kernel1(opcode, bo_instr1, instr_v1.size(), bo_a1, bo_b1, bo_out1);
+    t2_launch = std::chrono::high_resolution_clock::now();
+    r1 = run.wait();
+    t1_done = std::chrono::high_resolution_clock::now();
+    r2 = run2.wait();
+    t2_done = std::chrono::high_resolution_clock::now();
+
+    // auto third = std::chrono::high_resolution_clock::now();
+    // auto run3 = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
+    // ert_cmd_state r3 = run3.wait();
+    // auto third_end = std::chrono::high_resolution_clock::now();
+    // std::cout << "Third kernel took " << std::chrono::duration_cast<std::chrono::microseconds>(third_end - third).count() << "us." << std::endl;
     // ******** blocking 
     // auto run = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
     // r1 = run.wait();

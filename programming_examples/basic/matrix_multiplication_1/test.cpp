@@ -381,7 +381,9 @@ int main(int argc, const char *argv[]) {
       bo_out1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
       auto start1 = std::chrono::high_resolution_clock::now();
         auto run1 = kernel1(3, bo_instr1, instr_v1.size(), bo_a1, bo_b1, bo_out1);
+        auto run2 = kernel(3, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
       ert_cmd_state r = run1.wait();
+      ert_cmd_state r1 = run2.wait();
       auto stop1 = std::chrono::high_resolution_clock::now();
       bo_out1.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
       memcpy(CVec1.data(), bufOut1, (CVec1.size() * sizeof(C_DATATYPE)));
