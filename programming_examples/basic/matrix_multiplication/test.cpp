@@ -129,8 +129,13 @@ int main(int argc, const char *argv[]) {
   if (verbosity >= 1)
     std::cout << "Registering xclbin: " << vm["xclbin"].as<std::string>()
               << "\n";
-
+  std::chrono::high_resolution_clock::time_point t1 =
+      std::chrono::high_resolution_clock::now();                          
   device.register_xclbin(xclbin);
+  std::chrono::high_resolution_clock::time_point t2 =
+      std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
+  std::cout << "Registering xclbin took " << duration << "us." << std::endl;
 
   // get a hardware context
   if (verbosity >= 1)
