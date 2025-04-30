@@ -1,0 +1,532 @@
+module {
+  aie.device(npu1_4col) {
+    memref.global "public" @inB_0_cons : memref<32xi16>
+    memref.global "public" @inB_1_cons : memref<32xi16>
+    memref.global "public" @inB : memref<32xi16>
+    memref.global "public" @outC1_cons : memref<32xi32>
+    memref.global "public" @outC1 : memref<32xi32>
+    memref.global "public" @inA1_cons : memref<32x32xi16>
+    memref.global "public" @inA1 : memref<32x32xi16>
+    memref.global "public" @memA1_cons : memref<1024xi16>
+    memref.global "public" @memA1 : memref<1024xi16>
+    memref.global "public" @outC0_cons : memref<32xi32>
+    memref.global "public" @outC0 : memref<32xi32>
+    memref.global "public" @inA0_cons : memref<32x32xi16>
+    memref.global "public" @inA0 : memref<32x32xi16>
+    memref.global "public" @memA0_cons : memref<1024xi16>
+    memref.global "public" @memA0 : memref<1024xi16>
+    func.func private @zero_scalar_i32(memref<32xi32>)
+    func.func private @matvec_scalar_i16_i32(memref<32x32xi16>, memref<32xi16>, memref<32xi32>)
+    %shim_noc_tile_0_0 = aie.tile(0, 0) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 15>}
+    %shim_noc_tile_1_0 = aie.tile(1, 0) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 15>}
+    %shim_noc_tile_2_0 = aie.tile(2, 0) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 15>}
+    %shim_noc_tile_3_0 = aie.tile(3, 0) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 15>}
+    %mem_tile_0_1 = aie.tile(0, 1) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 26>}
+    %mem_tile_1_1 = aie.tile(1, 1) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 26>}
+    %mem_tile_2_1 = aie.tile(2, 1) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 26>}
+    %mem_tile_3_1 = aie.tile(3, 1) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 26>}
+    %tile_0_2 = aie.tile(0, 2) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 27>}
+    %tile_1_2 = aie.tile(1, 2) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 27>}
+    %tile_2_2 = aie.tile(2, 2) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 27>}
+    %tile_3_2 = aie.tile(3, 2) {controller_id = #aie.packet_info<pkt_type = 0, pkt_id = 27>}
+    %inB_0_cons_buff_0 = aie.buffer(%tile_0_2) {address = 5376 : i32, sym_name = "inB_0_cons_buff_0"} : memref<32xi16> 
+    %inB_0_cons_buff_1 = aie.buffer(%tile_0_2) {address = 5440 : i32, sym_name = "inB_0_cons_buff_1"} : memref<32xi16> 
+    %inB_0_cons_prod_lock = aie.lock(%tile_0_2, 4) {init = 2 : i32, sym_name = "inB_0_cons_prod_lock"}
+    %inB_0_cons_cons_lock = aie.lock(%tile_0_2, 5) {init = 0 : i32, sym_name = "inB_0_cons_cons_lock"}
+    %inB_1_cons_buff_0 = aie.buffer(%tile_1_2) {address = 5376 : i32, sym_name = "inB_1_cons_buff_0"} : memref<32xi16> 
+    %inB_1_cons_buff_1 = aie.buffer(%tile_1_2) {address = 5440 : i32, sym_name = "inB_1_cons_buff_1"} : memref<32xi16> 
+    %inB_1_cons_prod_lock = aie.lock(%tile_1_2, 4) {init = 2 : i32, sym_name = "inB_1_cons_prod_lock"}
+    %inB_1_cons_cons_lock = aie.lock(%tile_1_2, 5) {init = 0 : i32, sym_name = "inB_1_cons_cons_lock"}
+    %inB_prod_lock = aie.lock(%shim_noc_tile_1_0, 4) {init = 1 : i32, sym_name = "inB_prod_lock"}
+    %inB_cons_lock = aie.lock(%shim_noc_tile_1_0, 5) {init = 0 : i32, sym_name = "inB_cons_lock"}
+    %outC1_cons_prod_lock = aie.lock(%shim_noc_tile_1_0, 2) {init = 1 : i32, sym_name = "outC1_cons_prod_lock"}
+    %outC1_cons_cons_lock = aie.lock(%shim_noc_tile_1_0, 3) {init = 0 : i32, sym_name = "outC1_cons_cons_lock"}
+    %outC1_buff_0 = aie.buffer(%tile_1_2) {address = 5120 : i32, sym_name = "outC1_buff_0"} : memref<32xi32> 
+    %outC1_buff_1 = aie.buffer(%tile_1_2) {address = 5248 : i32, sym_name = "outC1_buff_1"} : memref<32xi32> 
+    %outC1_prod_lock = aie.lock(%tile_1_2, 2) {init = 2 : i32, sym_name = "outC1_prod_lock"}
+    %outC1_cons_lock = aie.lock(%tile_1_2, 3) {init = 0 : i32, sym_name = "outC1_cons_lock"}
+    %inA1_cons_buff_0 = aie.buffer(%tile_1_2) {address = 1024 : i32, sym_name = "inA1_cons_buff_0"} : memref<32x32xi16> 
+    %inA1_cons_buff_1 = aie.buffer(%tile_1_2) {address = 3072 : i32, sym_name = "inA1_cons_buff_1"} : memref<32x32xi16> 
+    %inA1_cons_prod_lock = aie.lock(%tile_1_2, 0) {init = 2 : i32, sym_name = "inA1_cons_prod_lock"}
+    %inA1_cons_cons_lock = aie.lock(%tile_1_2, 1) {init = 0 : i32, sym_name = "inA1_cons_cons_lock"}
+    %memA1_cons_buff_0 = aie.buffer(%mem_tile_1_1) {address = 0 : i32, sym_name = "memA1_cons_buff_0"} : memref<1024xi16> 
+    %memA1_cons_buff_1 = aie.buffer(%mem_tile_1_1) {address = 2048 : i32, sym_name = "memA1_cons_buff_1"} : memref<1024xi16> 
+    %memA1_cons_prod_lock = aie.lock(%mem_tile_1_1, 0) {init = 2 : i32, sym_name = "memA1_cons_prod_lock"}
+    %memA1_cons_cons_lock = aie.lock(%mem_tile_1_1, 1) {init = 0 : i32, sym_name = "memA1_cons_cons_lock"}
+    %memA1_prod_lock = aie.lock(%shim_noc_tile_1_0, 0) {init = 1 : i32, sym_name = "memA1_prod_lock"}
+    %memA1_cons_lock = aie.lock(%shim_noc_tile_1_0, 1) {init = 0 : i32, sym_name = "memA1_cons_lock"}
+    %outC0_cons_prod_lock = aie.lock(%shim_noc_tile_0_0, 2) {init = 1 : i32, sym_name = "outC0_cons_prod_lock"}
+    %outC0_cons_cons_lock = aie.lock(%shim_noc_tile_0_0, 3) {init = 0 : i32, sym_name = "outC0_cons_cons_lock"}
+    %outC0_buff_0 = aie.buffer(%tile_0_2) {address = 5120 : i32, sym_name = "outC0_buff_0"} : memref<32xi32> 
+    %outC0_buff_1 = aie.buffer(%tile_0_2) {address = 5248 : i32, sym_name = "outC0_buff_1"} : memref<32xi32> 
+    %outC0_prod_lock = aie.lock(%tile_0_2, 2) {init = 2 : i32, sym_name = "outC0_prod_lock"}
+    %outC0_cons_lock = aie.lock(%tile_0_2, 3) {init = 0 : i32, sym_name = "outC0_cons_lock"}
+    %inA0_cons_buff_0 = aie.buffer(%tile_0_2) {address = 1024 : i32, sym_name = "inA0_cons_buff_0"} : memref<32x32xi16> 
+    %inA0_cons_buff_1 = aie.buffer(%tile_0_2) {address = 3072 : i32, sym_name = "inA0_cons_buff_1"} : memref<32x32xi16> 
+    %inA0_cons_prod_lock = aie.lock(%tile_0_2, 0) {init = 2 : i32, sym_name = "inA0_cons_prod_lock"}
+    %inA0_cons_cons_lock = aie.lock(%tile_0_2, 1) {init = 0 : i32, sym_name = "inA0_cons_cons_lock"}
+    %memA0_cons_buff_0 = aie.buffer(%mem_tile_0_1) {address = 0 : i32, sym_name = "memA0_cons_buff_0"} : memref<1024xi16> 
+    %memA0_cons_buff_1 = aie.buffer(%mem_tile_0_1) {address = 2048 : i32, sym_name = "memA0_cons_buff_1"} : memref<1024xi16> 
+    %memA0_cons_prod_lock = aie.lock(%mem_tile_0_1, 0) {init = 2 : i32, sym_name = "memA0_cons_prod_lock"}
+    %memA0_cons_cons_lock = aie.lock(%mem_tile_0_1, 1) {init = 0 : i32, sym_name = "memA0_cons_cons_lock"}
+    %memA0_prod_lock = aie.lock(%shim_noc_tile_0_0, 0) {init = 1 : i32, sym_name = "memA0_prod_lock"}
+    %memA0_cons_lock = aie.lock(%shim_noc_tile_0_0, 1) {init = 0 : i32, sym_name = "memA0_cons_lock"}
+    aie.flow(%shim_noc_tile_0_0, DMA : 0, %mem_tile_0_1, DMA : 0)
+    aie.flow(%mem_tile_0_1, DMA : 0, %tile_0_2, DMA : 0)
+    aie.flow(%tile_0_2, DMA : 0, %shim_noc_tile_0_0, DMA : 0)
+    aie.flow(%shim_noc_tile_1_0, DMA : 0, %mem_tile_1_1, DMA : 0)
+    aie.flow(%mem_tile_1_1, DMA : 0, %tile_1_2, DMA : 0)
+    aie.flow(%tile_1_2, DMA : 0, %shim_noc_tile_1_0, DMA : 0)
+    aie.flow(%shim_noc_tile_1_0, DMA : 1, %tile_1_2, DMA : 1)
+    aie.flow(%shim_noc_tile_1_0, DMA : 1, %tile_0_2, DMA : 1)
+    %core_0_2 = aie.core(%tile_0_2) {
+      %c0 = arith.constant 0 : index
+      %c4294967295 = arith.constant 4294967295 : index
+      %c1 = arith.constant 1 : index
+      %c4294967294 = arith.constant 4294967294 : index
+      %c2 = arith.constant 2 : index
+      cf.br ^bb1(%c0 : index)
+    ^bb1(%0: index):  // 2 preds: ^bb0, ^bb8
+      %1 = arith.cmpi slt, %0, %c4294967294 : index
+      cf.cond_br %1, ^bb2, ^bb9
+    ^bb2:  // pred: ^bb1
+      aie.use_lock(%outC0_prod_lock, AcquireGreaterEqual, 1)
+      func.call @zero_scalar_i32(%outC0_buff_0) : (memref<32xi32>) -> ()
+      %c0_0 = arith.constant 0 : index
+      %c128 = arith.constant 128 : index
+      %c1_1 = arith.constant 1 : index
+      %c2_2 = arith.constant 2 : index
+      cf.br ^bb3(%c0_0 : index)
+    ^bb3(%2: index):  // 2 preds: ^bb2, ^bb4
+      %3 = arith.cmpi slt, %2, %c128 : index
+      cf.cond_br %3, ^bb4, ^bb5
+    ^bb4:  // pred: ^bb3
+      aie.use_lock(%inA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_0_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA0_cons_buff_0, %inB_0_cons_buff_0, %outC0_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_0_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA0_cons_buff_1, %inB_0_cons_buff_1, %outC0_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_0_cons_prod_lock, Release, 1)
+      %4 = arith.addi %2, %c2_2 : index
+      cf.br ^bb3(%4 : index)
+    ^bb5:  // pred: ^bb3
+      aie.use_lock(%outC0_cons_lock, Release, 1)
+      aie.use_lock(%outC0_prod_lock, AcquireGreaterEqual, 1)
+      func.call @zero_scalar_i32(%outC0_buff_1) : (memref<32xi32>) -> ()
+      %c0_3 = arith.constant 0 : index
+      %c128_4 = arith.constant 128 : index
+      %c1_5 = arith.constant 1 : index
+      %c2_6 = arith.constant 2 : index
+      cf.br ^bb6(%c0_3 : index)
+    ^bb6(%5: index):  // 2 preds: ^bb5, ^bb7
+      %6 = arith.cmpi slt, %5, %c128_4 : index
+      cf.cond_br %6, ^bb7, ^bb8
+    ^bb7:  // pred: ^bb6
+      aie.use_lock(%inA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_0_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA0_cons_buff_0, %inB_0_cons_buff_0, %outC0_buff_1) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_0_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA0_cons_buff_1, %inB_0_cons_buff_1, %outC0_buff_1) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_0_cons_prod_lock, Release, 1)
+      %7 = arith.addi %5, %c2_6 : index
+      cf.br ^bb6(%7 : index)
+    ^bb8:  // pred: ^bb6
+      aie.use_lock(%outC0_cons_lock, Release, 1)
+      %8 = arith.addi %0, %c2 : index
+      cf.br ^bb1(%8 : index)
+    ^bb9:  // pred: ^bb1
+      aie.use_lock(%outC0_prod_lock, AcquireGreaterEqual, 1)
+      func.call @zero_scalar_i32(%outC0_buff_0) : (memref<32xi32>) -> ()
+      %c0_7 = arith.constant 0 : index
+      %c128_8 = arith.constant 128 : index
+      %c1_9 = arith.constant 1 : index
+      %c2_10 = arith.constant 2 : index
+      cf.br ^bb10(%c0_7 : index)
+    ^bb10(%9: index):  // 2 preds: ^bb9, ^bb11
+      %10 = arith.cmpi slt, %9, %c128_8 : index
+      cf.cond_br %10, ^bb11, ^bb12
+    ^bb11:  // pred: ^bb10
+      aie.use_lock(%inA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_0_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA0_cons_buff_0, %inB_0_cons_buff_0, %outC0_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_0_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA0_cons_buff_1, %inB_0_cons_buff_1, %outC0_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA0_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_0_cons_prod_lock, Release, 1)
+      %11 = arith.addi %9, %c2_10 : index
+      cf.br ^bb10(%11 : index)
+    ^bb12:  // pred: ^bb10
+      aie.use_lock(%outC0_cons_lock, Release, 1)
+      aie.end
+    } {link_with = "mv_32x32.o"}
+    %core_1_2 = aie.core(%tile_1_2) {
+      %c0 = arith.constant 0 : index
+      %c4294967295 = arith.constant 4294967295 : index
+      %c1 = arith.constant 1 : index
+      %c4294967294 = arith.constant 4294967294 : index
+      %c2 = arith.constant 2 : index
+      cf.br ^bb1(%c0 : index)
+    ^bb1(%0: index):  // 2 preds: ^bb0, ^bb8
+      %1 = arith.cmpi slt, %0, %c4294967294 : index
+      cf.cond_br %1, ^bb2, ^bb9
+    ^bb2:  // pred: ^bb1
+      aie.use_lock(%outC1_prod_lock, AcquireGreaterEqual, 1)
+      func.call @zero_scalar_i32(%outC1_buff_0) : (memref<32xi32>) -> ()
+      %c0_0 = arith.constant 0 : index
+      %c128 = arith.constant 128 : index
+      %c1_1 = arith.constant 1 : index
+      %c2_2 = arith.constant 2 : index
+      cf.br ^bb3(%c0_0 : index)
+    ^bb3(%2: index):  // 2 preds: ^bb2, ^bb4
+      %3 = arith.cmpi slt, %2, %c128 : index
+      cf.cond_br %3, ^bb4, ^bb5
+    ^bb4:  // pred: ^bb3
+      aie.use_lock(%inA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_1_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA1_cons_buff_0, %inB_1_cons_buff_0, %outC1_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_1_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA1_cons_buff_1, %inB_1_cons_buff_1, %outC1_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_1_cons_prod_lock, Release, 1)
+      %4 = arith.addi %2, %c2_2 : index
+      cf.br ^bb3(%4 : index)
+    ^bb5:  // pred: ^bb3
+      aie.use_lock(%outC1_cons_lock, Release, 1)
+      aie.use_lock(%outC1_prod_lock, AcquireGreaterEqual, 1)
+      func.call @zero_scalar_i32(%outC1_buff_1) : (memref<32xi32>) -> ()
+      %c0_3 = arith.constant 0 : index
+      %c128_4 = arith.constant 128 : index
+      %c1_5 = arith.constant 1 : index
+      %c2_6 = arith.constant 2 : index
+      cf.br ^bb6(%c0_3 : index)
+    ^bb6(%5: index):  // 2 preds: ^bb5, ^bb7
+      %6 = arith.cmpi slt, %5, %c128_4 : index
+      cf.cond_br %6, ^bb7, ^bb8
+    ^bb7:  // pred: ^bb6
+      aie.use_lock(%inA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_1_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA1_cons_buff_0, %inB_1_cons_buff_0, %outC1_buff_1) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_1_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA1_cons_buff_1, %inB_1_cons_buff_1, %outC1_buff_1) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_1_cons_prod_lock, Release, 1)
+      %7 = arith.addi %5, %c2_6 : index
+      cf.br ^bb6(%7 : index)
+    ^bb8:  // pred: ^bb6
+      aie.use_lock(%outC1_cons_lock, Release, 1)
+      %8 = arith.addi %0, %c2 : index
+      cf.br ^bb1(%8 : index)
+    ^bb9:  // pred: ^bb1
+      aie.use_lock(%outC1_prod_lock, AcquireGreaterEqual, 1)
+      func.call @zero_scalar_i32(%outC1_buff_0) : (memref<32xi32>) -> ()
+      %c0_7 = arith.constant 0 : index
+      %c128_8 = arith.constant 128 : index
+      %c1_9 = arith.constant 1 : index
+      %c2_10 = arith.constant 2 : index
+      cf.br ^bb10(%c0_7 : index)
+    ^bb10(%9: index):  // 2 preds: ^bb9, ^bb11
+      %10 = arith.cmpi slt, %9, %c128_8 : index
+      cf.cond_br %10, ^bb11, ^bb12
+    ^bb11:  // pred: ^bb10
+      aie.use_lock(%inA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_1_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA1_cons_buff_0, %inB_1_cons_buff_0, %outC1_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.use_lock(%inB_1_cons_cons_lock, AcquireGreaterEqual, 1)
+      func.call @matvec_scalar_i16_i32(%inA1_cons_buff_1, %inB_1_cons_buff_1, %outC1_buff_0) : (memref<32x32xi16>, memref<32xi16>, memref<32xi32>) -> ()
+      aie.use_lock(%inA1_cons_prod_lock, Release, 1)
+      aie.use_lock(%inB_1_cons_prod_lock, Release, 1)
+      %11 = arith.addi %9, %c2_10 : index
+      cf.br ^bb10(%11 : index)
+    ^bb12:  // pred: ^bb10
+      aie.use_lock(%outC1_cons_lock, Release, 1)
+      aie.end
+    } {link_with = "mv_32x32.o"}
+    aiex.runtime_sequence @sequence(%arg0: memref<4194304xi16>, %arg1: memref<4096xi16>, %arg2: memref<1024xi32>) {
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 0][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 0][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2097152][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 512][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 131072][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 32][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2228224][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 544][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 262144][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 64][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2359296][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 576][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 393216][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 96][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2490368][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 608][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 524288][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 128][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2621440][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 640][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 655360][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 160][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2752512][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 672][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 786432][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 192][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 2883584][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 704][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 917504][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 224][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3014656][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 736][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1048576][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 256][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3145728][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 768][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1179648][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 288][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3276800][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 800][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1310720][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 320][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3407872][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 832][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1441792][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 352][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3538944][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 864][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1572864][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 384][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3670016][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 896][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1703936][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 416][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3801088][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 928][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1835008][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 448][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 3932160][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 960][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+      aiex.npu.dma_memcpy_nd(0, 0, %arg1[0, 0, 0, 0][1, 1, 1, 4096][0, 0, 0, 1]) {id = 2 : i64, metadata = @inB} : memref<4096xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 1966080][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA0} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 480][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC0} : memref<1024xi32>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg0[0, 0, 0, 4063232][1, 128, 32, 32][131072, 32, 4096, 1]) {id = 1 : i64, metadata = @memA1} : memref<4194304xi16>
+      aiex.npu.dma_memcpy_nd(0, 0, %arg2[0, 0, 0, 992][1, 1, 1, 32][0, 0, 0, 1]) {id = 0 : i64, metadata = @outC1} : memref<1024xi32>
+      aiex.npu.dma_wait {symbol = @outC0}
+      aiex.npu.dma_wait {symbol = @outC1}
+    }
+    aie.shim_dma_allocation @memA0(MM2S, 0, 0)
+    %memtile_dma_0_1 = aie.memtile_dma(%mem_tile_0_1) {
+      %0 = aie.dma_start(S2MM, 0, ^bb1, ^bb3)
+    ^bb1:  // 2 preds: ^bb0, ^bb2
+      aie.use_lock(%memA0_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA0_cons_buff_0 : memref<1024xi16>, 0, 1024) {bd_id = 0 : i32, next_bd_id = 1 : i32}
+      aie.use_lock(%memA0_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb2
+    ^bb2:  // pred: ^bb1
+      aie.use_lock(%memA0_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA0_cons_buff_1 : memref<1024xi16>, 0, 1024) {bd_id = 1 : i32, next_bd_id = 0 : i32}
+      aie.use_lock(%memA0_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb1
+    ^bb3:  // pred: ^bb0
+      %1 = aie.dma_start(MM2S, 0, ^bb4, ^bb6)
+    ^bb4:  // 2 preds: ^bb3, ^bb5
+      aie.use_lock(%memA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA0_cons_buff_0 : memref<1024xi16>, 0, 1024) {bd_id = 2 : i32, next_bd_id = 3 : i32}
+      aie.use_lock(%memA0_cons_prod_lock, Release, 1)
+      aie.next_bd ^bb5
+    ^bb5:  // pred: ^bb4
+      aie.use_lock(%memA0_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA0_cons_buff_1 : memref<1024xi16>, 0, 1024) {bd_id = 3 : i32, next_bd_id = 2 : i32}
+      aie.use_lock(%memA0_cons_prod_lock, Release, 1)
+      aie.next_bd ^bb4
+    ^bb6:  // pred: ^bb3
+      aie.end
+    }
+    %mem_0_2 = aie.mem(%tile_0_2) {
+      %0 = aie.dma_start(S2MM, 0, ^bb1, ^bb3)
+    ^bb1:  // 2 preds: ^bb0, ^bb2
+      aie.use_lock(%inA0_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inA0_cons_buff_0 : memref<32x32xi16>, 0, 1024) {bd_id = 0 : i32, next_bd_id = 1 : i32}
+      aie.use_lock(%inA0_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb2
+    ^bb2:  // pred: ^bb1
+      aie.use_lock(%inA0_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inA0_cons_buff_1 : memref<32x32xi16>, 0, 1024) {bd_id = 1 : i32, next_bd_id = 0 : i32}
+      aie.use_lock(%inA0_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb1
+    ^bb3:  // pred: ^bb0
+      %1 = aie.dma_start(MM2S, 0, ^bb4, ^bb6)
+    ^bb4:  // 2 preds: ^bb3, ^bb5
+      aie.use_lock(%outC0_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%outC0_buff_0 : memref<32xi32>, 0, 32) {bd_id = 2 : i32, next_bd_id = 3 : i32}
+      aie.use_lock(%outC0_prod_lock, Release, 1)
+      aie.next_bd ^bb5
+    ^bb5:  // pred: ^bb4
+      aie.use_lock(%outC0_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%outC0_buff_1 : memref<32xi32>, 0, 32) {bd_id = 3 : i32, next_bd_id = 2 : i32}
+      aie.use_lock(%outC0_prod_lock, Release, 1)
+      aie.next_bd ^bb4
+    ^bb6:  // pred: ^bb3
+      %2 = aie.dma_start(S2MM, 1, ^bb7, ^bb9)
+    ^bb7:  // 2 preds: ^bb6, ^bb8
+      aie.use_lock(%inB_0_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inB_0_cons_buff_0 : memref<32xi16>, 0, 32) {bd_id = 4 : i32, next_bd_id = 5 : i32}
+      aie.use_lock(%inB_0_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb8
+    ^bb8:  // pred: ^bb7
+      aie.use_lock(%inB_0_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inB_0_cons_buff_1 : memref<32xi16>, 0, 32) {bd_id = 5 : i32, next_bd_id = 4 : i32}
+      aie.use_lock(%inB_0_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb7
+    ^bb9:  // pred: ^bb6
+      aie.end
+    }
+    aie.shim_dma_allocation @outC0(S2MM, 0, 0)
+    aie.shim_dma_allocation @memA1(MM2S, 0, 1)
+    %memtile_dma_1_1 = aie.memtile_dma(%mem_tile_1_1) {
+      %0 = aie.dma_start(S2MM, 0, ^bb1, ^bb3)
+    ^bb1:  // 2 preds: ^bb0, ^bb2
+      aie.use_lock(%memA1_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA1_cons_buff_0 : memref<1024xi16>, 0, 1024) {bd_id = 0 : i32, next_bd_id = 1 : i32}
+      aie.use_lock(%memA1_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb2
+    ^bb2:  // pred: ^bb1
+      aie.use_lock(%memA1_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA1_cons_buff_1 : memref<1024xi16>, 0, 1024) {bd_id = 1 : i32, next_bd_id = 0 : i32}
+      aie.use_lock(%memA1_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb1
+    ^bb3:  // pred: ^bb0
+      %1 = aie.dma_start(MM2S, 0, ^bb4, ^bb6)
+    ^bb4:  // 2 preds: ^bb3, ^bb5
+      aie.use_lock(%memA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA1_cons_buff_0 : memref<1024xi16>, 0, 1024) {bd_id = 2 : i32, next_bd_id = 3 : i32}
+      aie.use_lock(%memA1_cons_prod_lock, Release, 1)
+      aie.next_bd ^bb5
+    ^bb5:  // pred: ^bb4
+      aie.use_lock(%memA1_cons_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%memA1_cons_buff_1 : memref<1024xi16>, 0, 1024) {bd_id = 3 : i32, next_bd_id = 2 : i32}
+      aie.use_lock(%memA1_cons_prod_lock, Release, 1)
+      aie.next_bd ^bb4
+    ^bb6:  // pred: ^bb3
+      aie.end
+    }
+    %mem_1_2 = aie.mem(%tile_1_2) {
+      %0 = aie.dma_start(S2MM, 0, ^bb1, ^bb3)
+    ^bb1:  // 2 preds: ^bb0, ^bb2
+      aie.use_lock(%inA1_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inA1_cons_buff_0 : memref<32x32xi16>, 0, 1024) {bd_id = 0 : i32, next_bd_id = 1 : i32}
+      aie.use_lock(%inA1_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb2
+    ^bb2:  // pred: ^bb1
+      aie.use_lock(%inA1_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inA1_cons_buff_1 : memref<32x32xi16>, 0, 1024) {bd_id = 1 : i32, next_bd_id = 0 : i32}
+      aie.use_lock(%inA1_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb1
+    ^bb3:  // pred: ^bb0
+      %1 = aie.dma_start(MM2S, 0, ^bb4, ^bb6)
+    ^bb4:  // 2 preds: ^bb3, ^bb5
+      aie.use_lock(%outC1_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%outC1_buff_0 : memref<32xi32>, 0, 32) {bd_id = 2 : i32, next_bd_id = 3 : i32}
+      aie.use_lock(%outC1_prod_lock, Release, 1)
+      aie.next_bd ^bb5
+    ^bb5:  // pred: ^bb4
+      aie.use_lock(%outC1_cons_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%outC1_buff_1 : memref<32xi32>, 0, 32) {bd_id = 3 : i32, next_bd_id = 2 : i32}
+      aie.use_lock(%outC1_prod_lock, Release, 1)
+      aie.next_bd ^bb4
+    ^bb6:  // pred: ^bb3
+      %2 = aie.dma_start(S2MM, 1, ^bb7, ^bb9)
+    ^bb7:  // 2 preds: ^bb6, ^bb8
+      aie.use_lock(%inB_1_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inB_1_cons_buff_0 : memref<32xi16>, 0, 32) {bd_id = 4 : i32, next_bd_id = 5 : i32}
+      aie.use_lock(%inB_1_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb8
+    ^bb8:  // pred: ^bb7
+      aie.use_lock(%inB_1_cons_prod_lock, AcquireGreaterEqual, 1)
+      aie.dma_bd(%inB_1_cons_buff_1 : memref<32xi16>, 0, 32) {bd_id = 5 : i32, next_bd_id = 4 : i32}
+      aie.use_lock(%inB_1_cons_cons_lock, Release, 1)
+      aie.next_bd ^bb7
+    ^bb9:  // pred: ^bb6
+      aie.end
+    }
+    aie.shim_dma_allocation @outC1(S2MM, 0, 1)
+    aie.shim_dma_allocation @inB(MM2S, 1, 1)
+    aie.packet_flow(15) {
+      aie.packet_source<%shim_noc_tile_0_0, TileControl : 0>
+      aie.packet_dest<%shim_noc_tile_0_0, South : 0>
+    } {keep_pkt_header = true, priority_route = true}
+    aie.packet_flow(15) {
+      aie.packet_source<%shim_noc_tile_1_0, TileControl : 0>
+      aie.packet_dest<%shim_noc_tile_1_0, South : 0>
+    } {keep_pkt_header = true, priority_route = true}
+    aie.packet_flow(15) {
+      aie.packet_source<%shim_noc_tile_2_0, TileControl : 0>
+      aie.packet_dest<%shim_noc_tile_2_0, South : 0>
+    } {keep_pkt_header = true, priority_route = true}
+    aie.packet_flow(15) {
+      aie.packet_source<%shim_noc_tile_3_0, TileControl : 0>
+      aie.packet_dest<%shim_noc_tile_3_0, South : 0>
+    } {keep_pkt_header = true, priority_route = true}
+  }
+}

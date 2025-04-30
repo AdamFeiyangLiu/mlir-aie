@@ -1,0 +1,56 @@
+export XRT_HACK_UNSECURE_LOADING_XCLBIN=1 && \
+ ./matrix_vector.exe -x build/final_4096x4096x1.xclbin -i build/insts_4096x4096x1.txt -k MLIR_AIE -M 4096 -K 4096 -N 1 -v 2 --warmup 1 --iters 1
+Matrix size 4096x4096x1
+Sequence instr count: 216
+Loading xclbin: build/final_4096x4096x1.xclbin
+Kernel opcode: MLIR_AIE
+Name: MLIR_AIE
+Registering xclbin: build/final_4096x4096x1.xclbin
+Getting hardware context.
+Getting handle to kernel:MLIR_AIE
+Writing data into buffer objects.
+DTYPE_IN  = std::bfloat16_t
+DTYPE_OUT = std::bfloat16_t
+Verification tolerance 0 absolute, 0 relative.
+A = 
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+    ...       ...       ...       ...       ...    ...     ...       ...       ...       ...       ...   
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+       5         5         5         5         5   ...        0         0         0         0         0  
+B = 
+       1  
+       0  
+       0  
+       0  
+       0  
+    ...   
+       0  
+       0  
+       0  
+       0  
+       0  
+Running Kernel (iteration 0).
+Running Kernel (iteration 1).
+Verifying against reference matmul ...
+Verify time: 0.00 s.
+
+Avg NPU matmul time: 27784.00us.
+Avg NPU gflops: 1.21
+
+Min NPU matmul time: 27784.00us.
+Max NPU gflops: 1.21
+
+Max NPU matmul time: 27784.00us.
+Min NPU gflops: 1.21
+Writing output matrix to matrix_output.csv
+Successfully wrote matrix to matrix_output.csv
+
+PASS!
+

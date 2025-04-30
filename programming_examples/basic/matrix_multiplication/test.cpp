@@ -159,7 +159,8 @@ int main(int argc, const char *argv[]) {
   std::vector<A_DATATYPE> AVec(A_VOLUME);
   for (int i = 0; i < A_VOLUME; i++) {
     // AVec[i] = matmul_common::get_random<A_DATATYPE>();
-    AVec[i] = i;
+    AVec[i] = 1;
+    // if(i < A_VO)
   }
   memcpy(bufA, AVec.data(), (AVec.size() * sizeof(A_DATATYPE)));
   B_DATATYPE *bufB = bo_b.map<B_DATATYPE *>();
@@ -168,17 +169,96 @@ int main(int argc, const char *argv[]) {
     BVec[i] = matmul_common::get_random<B_DATATYPE>() * i;
     // Diagonal:
     // if(i % N == i / N) {
-    //   BVec[i] = 1.0;
-    // } else {
-    //   BVec[i] = 0.0;
+    //   BVec[i] = 1;
+    // } else { 
+    //   BVec[i] = 0;
     // }
   }
+  auto xclbin2 = xrt::xclbin(vm["xclbin"].as<std::string>());
+  auto xkernels2 = xclbin2.get_kernels();
+  auto xkernel2 = *std::find_if(xkernels2.begin(), xkernels2.end(),
+                               [Node, verbosity](xrt::xclbin::kernel &k) {
+                                 auto name = k.get_name();
+                                 return name.rfind(Node, 0) == 0;
+                               });
+  auto kernelName2 = xkernel2.get_name();
+  device.register_xclbin(xclbin2);
+  auto context2 = xrt::hw_context(device, xclbin2.get_uuid());
+  auto kernel2 = xrt::kernel(context2, kernelName2);
   memcpy(bufB, BVec.data(), (BVec.size() * sizeof(B_DATATYPE)));
-
   // Initialize outputs; bufOut is results matrix plus tracing info
   char *bufOut = bo_out.map<char *>();
   std::vector<C_DATATYPE> CVec(C_VOLUME);
+
   memset(bufOut, 0, OUT_SIZE);
+
+
+  //Make 2 more bos to simulate 3 kernel
+  auto bo_instr2 = xrt::bo(device, instr_v.size() * sizeof(int),
+                          XCL_BO_FLAGS_CACHEABLE, kernel.group_id(1));
+  auto bo_a2 =
+      xrt::bo(device, A_SIZE, XRT_BO_FLAGS_HOST_ONLY, kernel.group_id(3));
+  auto bo_b2 =
+      xrt::bo(device, B_SIZE, XRT_BO_FLAGS_HOST_ONLY, kernel.group_id(4));
+  auto bo_out2 =
+      xrt::bo(device, OUT_SIZE, XRT_BO_FLAGS_HOST_ONLY, kernel.group_id(5));
+
+  auto bo_instr3 = xrt::bo(device, instr_v.size() * sizeof(int),
+                          XCL_BO_FLAGS_CACHEABLE, kernel.group_id(1));
+  auto bo_a3 =
+      xrt::bo(device, A_SIZE, XRT_BO_FLAGS_HOST_ONLY, kernel.group_id(3));
+  auto bo_b3 =
+      xrt::bo(device, B_SIZE, XRT_BO_FLAGS_HOST_ONLY, kernel.group_id(4));
+  auto bo_out3 =
+      xrt::bo(device, OUT_SIZE, XRT_BO_FLAGS_HOST_ONLY, kernel.group_id(5));
+
+  // initlize bos 
+  A_DATATYPE *bufA2 = bo_a2.map<A_DATATYPE *>();
+  std::vector<A_DATATYPE> AVec2(A_VOLUME);
+  for (int i = 0; i < A_VOLUME; i++) {
+    AVec2[i] = matmul_common::get_random<A_DATATYPE>();
+  }
+  memcpy(bufA2, AVec2.data(), (AVec2.size() * sizeof(A_DATATYPE)));
+
+  A_DATATYPE *bufA3 = bo_a3.map<A_DATATYPE *>();
+  std::vector<A_DATATYPE> AVec3(A_VOLUME);
+  for (int i = 0; i < A_VOLUME; i++) {
+    AVec3[i] = matmul_common::get_random<A_DATATYPE>();
+  }
+  memcpy(bufA3, AVec3.data(), (AVec3.size() * sizeof(A_DATATYPE)));
+
+  B_DATATYPE *bufB2 = bo_b2.map<B_DATATYPE *>();
+  std::vector<B_DATATYPE> BVec2(B_VOLUME);
+  for (int i = 0; i < B_VOLUME; i++) {
+    BVec2[i] = matmul_common::get_random<B_DATATYPE>();
+  }
+  memcpy(bufB2, BVec2.data(), (BVec2.size() * sizeof(B_DATATYPE)));
+
+  B_DATATYPE *bufB3 = bo_b3.map<B_DATATYPE *>();
+  std::vector<B_DATATYPE> BVec3(B_VOLUME);
+  for (int i = 0; i < B_VOLUME; i++) {
+    BVec3[i] = matmul_common::get_random<B_DATATYPE>();
+  }
+  memcpy(bufB3, BVec3.data(), (BVec3.size() * sizeof(B_DATATYPE)));
+
+  //output bos
+  char *bufOut2 = bo_out2.map<char *>();
+  std::vector<C_DATATYPE> CVec2(C_VOLUME);
+  memset(bufOut2, 0, OUT_SIZE);
+
+  //instruction bos
+  char *bufInstr2 = bo_instr2.map<char *>();
+  std::vector<int> instr_v2(instr_v.size());
+  memcpy(bufInstr2, instr_v.data(), instr_v.size() * sizeof(int));
+
+  char *bufInstr3 = bo_instr3.map<char *>();
+  std::vector<int> instr_v3(instr_v.size());
+  memcpy(bufInstr3, instr_v.data(), instr_v.size() * sizeof(int));
+
+
+  char *bufOut3 = bo_out3.map<char *>();
+  std::vector<C_DATATYPE> CVec3(C_VOLUME);
+  memset(bufOut3, 0, OUT_SIZE);
 
   if (verbosity >= 2) {
     std::cout << "DTYPE_IN  = " XSTR(DTYPE_IN) "\n";
@@ -199,6 +279,14 @@ int main(int argc, const char *argv[]) {
   bo_a.sync(XCL_BO_SYNC_BO_TO_DEVICE);
   bo_b.sync(XCL_BO_SYNC_BO_TO_DEVICE);
   bo_out.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_instr2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_a2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_b2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_out2.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_instr3.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_a3.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_b3.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo_out3.sync(XCL_BO_SYNC_BO_TO_DEVICE);
 
   unsigned num_iter = n_iterations + n_warmup_iterations;
   float npu_time_total = 0;
@@ -207,7 +295,7 @@ int main(int argc, const char *argv[]) {
 
   int errors = 0;
   float macs = 2.0 * float(M) * float(K) * float(N);
-
+  
   for (unsigned iter = 0; iter < num_iter; iter++) {
 
     if (verbosity >= 1) {
@@ -216,21 +304,58 @@ int main(int argc, const char *argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
     unsigned int opcode = 3;
     auto run = kernel(opcode, bo_instr, instr_v.size(), bo_a, bo_b, bo_out);
-    ert_cmd_state r = run.wait();
-    if (r != ERT_CMD_STATE_COMPLETED) {
+    auto run2 = kernel2(opcode, bo_instr2, instr_v.size(), bo_a2, bo_b2, bo_out2);
+    auto run3 = kernel(opcode, bo_instr3, instr_v.size(), bo_a3, bo_b3, bo_out3);
+
+    ert_cmd_state r  = run.wait();
+    ert_cmd_state r2 = run2.wait();  
+    ert_cmd_state r3 = run3.wait();
+    
+    
+    bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    bo_out2.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    bo_out3.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    if (r != ERT_CMD_STATE_COMPLETED || r2 != ERT_CMD_STATE_COMPLETED || r3 != ERT_CMD_STATE_COMPLETED) {
       std::cout << "Kernel did not complete. Returned status: " << r << "\n";
       return 1;
     }
+    
+    // ert_cmd_state r3 = run3.wait();
+    // bo_out3.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
     auto stop = std::chrono::high_resolution_clock::now();
-    bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-
     if (iter < n_warmup_iterations) {
       /* Warmup iterations do not count towards average runtime. */
       continue;
     }
+    C_DATATYPE *bufC = bo_out.map<C_DATATYPE *>();
+    C_DATATYPE *bufC2 = bo_out2.map<C_DATATYPE *>();
+    C_DATATYPE *bufC3 = bo_out3.map<C_DATATYPE *>();
+
+  // Open a file for writing the output matrix
+  // std::ofstream outFile("output_matrixC.csv");
+  // if (!outFile) {
+  //     std::cerr << "Error: Unable to open file for writing output matrix.\n";
+  //     return -1;
+  // }
+
+  // // Write matrix dimensions
+  // outFile << M << " " << N << "\n";
+
+  // // Write matrix data row by row
+  // for (int i = 0; i < M; i++) {
+  //     for (int j = 0; j < N; j++) {
+  //         outFile << bufC[i * N + j] << ",";
+  //     }
+  //     outFile << "\n";
+  // }
+
+  // Close the file
+  // outFile.close();
 
     if (do_verify) {
       memcpy(CVec.data(), bufOut, (CVec.size() * sizeof(C_DATATYPE)));
+      memcpy(CVec2.data(), bufOut2, (CVec2.size() * sizeof(C_DATATYPE)));
+      memcpy(CVec3.data(), bufOut3, (CVec3.size() * sizeof(C_DATATYPE)));
       if (verbosity >= 1) {
         if (do_verify_stochastic) {
           std::cout << "Verifying " << verify_stochastic_n_samples
@@ -246,9 +371,21 @@ int main(int argc, const char *argv[]) {
                                                   ACC_DATATYPE>(
             M, N, K, AVec, BVec, CVec, verify_stochastic_n_samples, verbosity,
             abs_tol, rel_tol, b_col_maj);
+        // errors += matmul_common::verify_stochastic<A_DATATYPE, C_DATATYPE,
+        //                                           ACC_DATATYPE>(
+        //     M, N, K, AVec2, BVec2, CVec2, verify_stochastic_n_samples, verbosity,
+        //     abs_tol, rel_tol, b_col_maj);
+        // errors += matmul_common::verify_stochastic<A_DATATYPE, C_DATATYPE,
+        //                                           ACC_DATATYPE>(
+        //     M, N, K, AVec3, BVec3, CVec3, verify_stochastic_n_samples, verbosity,
+        //     abs_tol, rel_tol, b_col_maj);
       } else {
         errors = matmul_common::verify<A_DATATYPE, C_DATATYPE, ACC_DATATYPE>(
             M, N, K, AVec, BVec, CVec, verbosity, abs_tol, rel_tol, b_col_maj);
+        // errors += matmul_common::verify<A_DATATYPE, C_DATATYPE, ACC_DATATYPE>(
+        //     M, N, K, AVec2, BVec2, CVec2, verbosity, abs_tol, rel_tol, b_col_maj);
+        // errors += matmul_common::verify<A_DATATYPE, C_DATATYPE, ACC_DATATYPE>(
+        //     M, N, K, AVec3, BVec3, CVec3, verbosity, abs_tol, rel_tol, b_col_maj);
       }
       auto vstop = std::chrono::system_clock::now();
       float vtime =
@@ -265,12 +402,13 @@ int main(int argc, const char *argv[]) {
     float npu_time =
         std::chrono::duration_cast<std::chrono::microseconds>(stop - start)
             .count();
-
+    
+  
     npu_time_total += npu_time;
     npu_time_min = (npu_time < npu_time_min) ? npu_time : npu_time_min;
     npu_time_max = (npu_time > npu_time_max) ? npu_time : npu_time_max;
   }
-
+  std::cout << "total time: " << npu_time_total << std::endl;
   // Only write out trace of last iteration.
   if (trace_size > 0) {
     memcpy(CVec.data(), bufOut, (CVec.size() * sizeof(C_DATATYPE)));

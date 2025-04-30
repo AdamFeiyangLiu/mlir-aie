@@ -13,12 +13,12 @@ from aie.helpers.dialects.ext.scf import _for as range_
 
 
 def my_matmul():
-    M = 288
-    K = 288
+    M = 4096
+    K = 4096
     m = 32
     k = 32
 
-    n_cores = 1
+    n_cores = 2
 
     A_sz = M * K
     B_sz = K
