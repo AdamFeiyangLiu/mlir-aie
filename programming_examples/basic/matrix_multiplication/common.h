@@ -290,7 +290,7 @@ void print_matrix(const std::vector<int8_t> matrix, int n_cols,
                col_sep, elide_sym, w);
 }
 
-constexpr int max_printable_errors = 32;
+constexpr int max_printable_errors = 256;
 
 template <typename Tout>
 struct error {

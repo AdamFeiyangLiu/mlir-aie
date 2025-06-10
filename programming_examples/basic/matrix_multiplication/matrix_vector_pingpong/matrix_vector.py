@@ -151,22 +151,25 @@ def my_matmul(dev, M, K):
             def sequence(A, B, C):
                 npu_dma_memcpy_nd(
                     metadata=inB_fifo,
-                    bd_id=2,
+                    bd_id=1,
                     mem=B,
                     sizes=[M_div_m_div_n_cores, 1, 1, K],
                     strides=[0, 0, 0, 1],
                 )
                 for i in range(n_cores):
-                    A_offset = i * M_div_m_div_n_cores * m * K
+                    
                     C_offset = i * M_div_m_div_n_cores * m
-                    npu_dma_memcpy_nd(
-                        metadata=memA_fifos[i],
-                        bd_id=1,
-                        mem=A,
-                        offsets=[0, 0, 0, A_offset],
-                        sizes=[M_div_m_div_n_cores, K_div_k, m, k],
-                        strides=[m_x_K, k, K, 1],
-                    )
+                    for pingpong in [0, 1]:
+                        A_offset = i * M_div_m_div_n_cores * m * K + pingpong*m*K*2
+                        A_sizes = [M_div_m_div_n_cores//2, K_div_k, m, k]
+                        npu_dma_memcpy_nd(
+                            metadata=memA_fifos[i],
+                            bd_id=2 + pingpong + i*2,
+                            mem=A,
+                            offsets=[0, 0, 0, A_offset],
+                            sizes=A_sizes,
+                            strides=[m_x_K, k, K, 1],
+                        )
                     npu_dma_memcpy_nd(
                         metadata=outC_fifos[i],
                         bd_id=0,

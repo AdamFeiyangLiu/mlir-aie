@@ -160,19 +160,20 @@ int main(int argc, const char *argv[]) {
   A_DATATYPE *bufA = bo_a.map<A_DATATYPE *>();
   std::vector<A_DATATYPE> AVec(A_VOLUME);
   for (int i = 0; i < A_VOLUME; i++) {
-    // AVec[i] = matmul_common::get_random<A_DATATYPE>();
-    AVec[i] = i;
+    AVec[i] = matmul_common::get_random<A_DATATYPE>();
+    //  AVec[i] = i; 
+    
   }
   memcpy(bufA, AVec.data(), (AVec.size() * sizeof(A_DATATYPE)));
   B_DATATYPE *bufB = bo_b.map<B_DATATYPE *>();
   std::vector<B_DATATYPE> BVec(B_VOLUME);
   for (int i = 0; i < B_VOLUME; i++) {
-    BVec[i] = matmul_common::get_random<B_DATATYPE>() * i;
-    // Diagonal:
+    BVec[i] = matmul_common::get_random<B_DATATYPE>();
+    Diagonal:
     // if(i % N == i / N) {
     //   BVec[i] = 1.0;
     // } else {
-    //   BVec[i] = 0.0;
+    //   BVec[i] = 0;
     // }
   }
   memcpy(bufB, BVec.data(), (BVec.size() * sizeof(B_DATATYPE)));
@@ -239,7 +240,18 @@ int main(int argc, const char *argv[]) {
       /* Warmup iterations do not count towards average runtime. */
       continue;
     }
-
+    // C_DATATYPE *bufC = bo_out.map<C_DATATYPE *>();
+    // std::ofstream outFile("output_matrixC.csv");
+    // if (!outFile) {
+    //       std::cerr << "Error: Unable to open file for writing output matrix.\n";
+    //       return -1;
+    //   }
+    //   for (int i = 0; i < M; i++) {
+    //         for (int j = 0; j < N; j++) {
+    //             outFile << bufC[i * N + j] << ",";
+    //         }
+    //         outFile << "\n";
+    //     }
     if (do_verify) {
       memcpy(CVec.data(), bufOut, (CVec.size() * sizeof(C_DATATYPE)));
       if (verbosity >= 1) {
@@ -271,7 +283,7 @@ int main(int argc, const char *argv[]) {
     } else {
       if (verbosity >= 1)
         std::cout << "WARNING: matmul results not verified." << std::endl;
-    }
+    }   
 
     float npu_time =
         std::chrono::duration_cast<std::chrono::microseconds>(stop - start)

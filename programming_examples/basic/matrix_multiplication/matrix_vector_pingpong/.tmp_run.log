@@ -1,0 +1,54 @@
+export XRT_HACK_UNSECURE_LOADING_XCLBIN=1 && \
+ ./matrix_vector.exe -x build/final_4096x4096x1.xclbin -i build/insts_4096x4096x1.txt -k MLIR_AIE -M 4096 -K 4096 -N 1 -v 2 --warmup 1 --iters 1
+Matrix size 4096x4096x1
+Sequence instr count: 318
+Loading xclbin: build/final_4096x4096x1.xclbin
+Kernel opcode: MLIR_AIE
+Name: MLIR_AIE
+Registering xclbin: build/final_4096x4096x1.xclbin
+Getting hardware context.
+Getting handle to kernel:MLIR_AIE
+Writing data into buffer objects.
+DTYPE_IN  = int16_t
+DTYPE_OUT = int16_t
+Verification tolerance 0 absolute, 0 relative.
+A = 
+       0         1         2         3         4   ...     4091      4092      4093      4094      4095  
+    4096      4097      4098      4099      4100   ...     8187      8188      8189      8190      8191  
+    8192      8193      8194      8195      8196   ...    12283     12284     12285     12286     12287  
+   12288     12289     12290     12291     12292   ...    16379     16380     16381     16382     16383  
+   16384     16385     16386     16387     16388   ...    20475     20476     20477     20478     20479  
+    ...       ...       ...       ...       ...    ...     ...       ...       ...       ...       ...   
+  -20480    -20479    -20478    -20477    -20476   ...   -16389    -16388    -16387    -16386    -16385  
+  -16384    -16383    -16382    -16381    -16380   ...   -12293    -12292    -12291    -12290    -12289  
+  -12288    -12287    -12286    -12285    -12284   ...    -8197     -8196     -8195     -8194     -8193  
+   -8192     -8191     -8190     -8189     -8188   ...    -4101     -4100     -4099     -4098     -4097  
+   -4096     -4095     -4094     -4093     -4092   ...       -5        -4        -3        -2        -1  
+B = 
+       0  
+  -28205  
+   26204  
+    -615  
+  -20312  
+    ...   
+   -1959  
+   19968  
+   16954  
+   21918  
+  -25775  
+Running Kernel (iteration 0).
+Running Kernel (iteration 1).
+Verifying against reference matmul ...
+Verify time: 0.00 s.
+
+Avg NPU matmul time: 2644.00us.
+Avg NPU gflops: 12.69
+
+Min NPU matmul time: 2644.00us.
+Max NPU gflops: 12.69
+
+Max NPU matmul time: 2644.00us.
+Min NPU gflops: 12.69
+
+PASS!
+

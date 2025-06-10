@@ -1,4 +1,4 @@
-    #
+#
 # This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -13,14 +13,13 @@ from aie.dialects.aiex import *
 from aie.helpers.dialects.ext.scf import _for as range_
 
 
-def my_matmul(dev, M, K):
-    # M = 288
-    # K = 288
- 
+def my_matmul(dev):
+    M = 288
+    K = 288
     m = 32
     k = 32
 
-    n_cores = 4
+    n_cores = 1
 
     A_sz = M * K
     B_sz = K
@@ -35,7 +34,7 @@ def my_matmul(dev, M, K):
     m_x_K = m * K
 
     # FIXME vectorized kernel is currently erroneous
-    vectorized = True
+    vectorized = False
 
     dtype_in = np.dtype[np.int16]
     dtype_in_str = "i16"
@@ -99,7 +98,7 @@ def my_matmul(dev, M, K):
                         A_ty,
                         (
                             [
-                                (k  // 2, 2),
+                                (k // 2 // 2, 2),
                                 (m, k),
                                 (2, 1),
                             ]
@@ -149,33 +148,44 @@ def my_matmul(dev, M, K):
                 np.ndarray[(C_sz,), dtype_out],
             )
             def sequence(A, B, C):
-                npu_dma_memcpy_nd(
-                    metadata=inB_fifo,
-                    bd_id=2,
-                    mem=B,
+                b_task = shim_dma_single_bd_task(
+                    inB_fifo,
+                    B,
                     sizes=[M_div_m_div_n_cores, 1, 1, K],
                     strides=[0, 0, 0, 1],
                 )
+
+                a_tasks = []
+                c_tasks = []
                 for i in range(n_cores):
                     A_offset = i * M_div_m_div_n_cores * m * K
                     C_offset = i * M_div_m_div_n_cores * m
-                    npu_dma_memcpy_nd(
-                        metadata=memA_fifos[i],
-                        bd_id=1,
-                        mem=A,
-                        offsets=[0, 0, 0, A_offset],
+
+                    a_task = shim_dma_single_bd_task(
+                        memA_fifos[i],
+                        A,
+                        offset=A_offset,
                         sizes=[M_div_m_div_n_cores, K_div_k, m, k],
                         strides=[m_x_K, k, K, 1],
                     )
-                    npu_dma_memcpy_nd(
-                        metadata=outC_fifos[i],
-                        bd_id=0,
-                        mem=C,
-                        offsets=[0, 0, 0, C_offset],
+                    a_tasks.append(a_task)
+
+                    c_task = shim_dma_single_bd_task(
+                        outC_fifos[i],
+                        C,
+                        offset=C_offset,
                         sizes=[1, 1, 1, C_sz_div_n_cores],
-                        strides=[0, 0, 0, 1],
+                        issue_token=True,
                     )
-                dma_wait(*outC_fifos)
+                    c_tasks.append(c_task)
+
+                dma_start_task(b_task)
+                dma_start_task(*a_tasks)
+                dma_start_task(*c_tasks)
+
+                dma_await_task(*c_tasks)
+                dma_free_task(b_task)
+                dma_free_task(*a_tasks)
 
     print(ctx.module)
 
@@ -185,10 +195,6 @@ if __name__ == "__main__":
         prog="AIE Matrix Vector Multiplication MLIR Design",
     )
     argparser.add_argument("--dev", type=str, choices=["npu", "npu2"], default="npu")
-    argparser.add_argument("-M", type=int, default=256)
-    argparser.add_argument("-K", type=int, default=256)
     args, _ = argparser.parse_known_args()  # <- ignore the rest args in makefile-common
     dev = args.dev
-    M = args.M
-    K = args.K
-    my_matmul(dev, M, K)
+    my_matmul(dev)

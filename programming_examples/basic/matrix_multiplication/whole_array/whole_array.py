@@ -294,7 +294,7 @@ def my_matmul(
                 of_offsets = [m * k * j for j in range(stop_row - start_row)]
             else:
                 of_offsets = []
-            object_fifo_link(
+            object_fifo_link(                           
                 A_l3l2_fifos[i],
                 [A_l2l1_fifos[j] for j in range(start_row, stop_row)],
                 [],
