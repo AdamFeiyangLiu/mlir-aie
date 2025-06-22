@@ -20,16 +20,16 @@ def my_matmul(dev, M, K):
     m = 32
     k = 32
 
-    n_cores = 4
+    n_cols = 4
     n_rows = 4
 
     A_sz = M * K
     B_sz = K
     C_sz = M
-    C_sz_div_n_cores = C_sz // n_cores 
+    C_sz_div_n_cols = C_sz // n_cols 
 
     M_div_m = M // m
-    M_div_m_div_n_cores = M // (m * n_cores) 
+    M_div_m_div_n_cols = M // (m * n_cols) 
     K_div_k = K // k
 
     m_x_k = m * k
@@ -55,9 +55,9 @@ def my_matmul(dev, M, K):
 
         @device(dev_ty)
         def device_body():
-            inA_ty = np.ndarray[(m * k * 4,), dtype_in]
+            inA_ty = np.ndarray[(m * k * n_rows,), dtype_in]
             inB_ty = np.ndarray[(k,), dtype_in]
-            MemC_ty = np.ndarray[(m * 4,), dtype_out]
+            MemC_ty = np.ndarray[(m * n_rows,), dtype_out]
             outC_ty = np.ndarray[(m,), dtype_out]
             A_ty = np.ndarray[(m, k), dtype_in]
 
@@ -81,29 +81,29 @@ def my_matmul(dev, M, K):
             MemTile3 = tile(3, 1)
             MemTiles = [MemTile0, MemTile1, MemTile2, MemTile3]
             memA_fifos = []
-            inA_fifos = [[None] * n_cores for _ in range(n_rows)]
-            outC_fifos = [[None] * n_cores for _ in range(n_rows)]
-            inB_fifos = [None] * n_cores
+            inA_fifos = [[None] * n_cols for _ in range(n_rows)]
+            outC_fifos = [[None] * n_cols for _ in range(n_rows)]
+            inB_fifos = [None] * n_cols
             memB_fifos = []
             memC_fifos = []
             # tiles = [
-            #     [tile(col, row) for col in range(0, n_cores)] for row in range(0, 6)
+            #     [tile(col, row) for col in range(0, n_cols)] for row in range(0, 6)
             # ]
             # cores = tiles[2:]
             cores = [
-                [tile(col, row) for col in range(0, n_cores)] for row in range(2, 2 + n_rows)
+                [tile(col, row) for col in range(0, n_cols)] for row in range(2, 2 + n_rows)
             ]
             # AIE-array data movement with object fifos
             # Input A
-            for i in range(n_cores):
+            for col in range(n_cols):
                 memA_fifos.append(
-                    object_fifo(f"memA{i}", ShimTiles[i], MemTiles[i], 2, inA_ty)
+                    object_fifo(f"memA{col}", ShimTiles[col], MemTiles[col], 2, inA_ty)
                 )
                 for row in range(n_rows):
-                    inA_fifos[row][i]= object_fifo(
-                            f"inA{row}{i}",
-                            MemTiles[i],
-                            cores[row][i],
+                    inA_fifos[row][col]= object_fifo(
+                            f"inA{row}{col}",
+                            MemTiles[col],
+                            cores[row][col],
                             2,
                             A_ty,
                             (
@@ -117,25 +117,25 @@ def my_matmul(dev, M, K):
                             ),  # transpose at 4-byte (2xbf16) granularity
                         )
                 
-                object_fifo_link(memA_fifos[i], [inA_fifos[row][i] for row in range(n_rows)],[],[m*k*j for j in range(n_rows)])#
+                object_fifo_link(memA_fifos[col], [inA_fifos[row][col] for row in range(n_rows)],[],[m*k*j for j in range(n_rows)])#
 
                 # Output C
                 memC_fifos.append(
-                    object_fifo(f"memC{i}", MemTiles[i], ShimTiles[i],2, MemC_ty) 
+                    object_fifo(f"memC{col}", MemTiles[col], ShimTiles[col],2, MemC_ty) 
                 )
                 for row in range(n_rows):
-                    outC_fifos[row][i]=object_fifo(
-                            f"outC{row}{i}", 
-                            cores[row][i], 
-                            MemTiles[i], 
+                    outC_fifos[row][col]=object_fifo(
+                            f"outC{row}{col}", 
+                            cores[row][col], 
+                            MemTiles[col], 
                             2, 
                             outC_ty,
                             []
                         )
                     
                 object_fifo_link(
-                    [outC_fifos[row][i] for row in range(n_rows)],
-                    memC_fifos[i], 
+                    [outC_fifos[row][col] for row in range(n_rows)],
+                    memC_fifos[col], 
                     [m*j for j in range(n_rows)],
                     # [0,0,0,0],
                     []
@@ -144,41 +144,41 @@ def my_matmul(dev, M, K):
                 #Input B
 
                 memB_fifos.append(
-                    object_fifo(f"memB{i}", ShimTiles[i], MemTiles[i], 2, inB_ty)
+                    object_fifo(f"memB{col}", ShimTiles[col], MemTiles[col], 2, inB_ty)
                 )
                 
                 
-                inB_fifos[i] = object_fifo(
-                    f"inB{i}", MemTiles[i], [cores[j][i] for j in range(n_rows)], 2, inB_ty
+                inB_fifos[col] = object_fifo(
+                    f"inB{col}", MemTiles[col], [cores[j][col] for j in range(n_rows)], 2, inB_ty
                 )
                 
                 # Link memB to all inB fifos for this column
                 object_fifo_link(
-                    memB_fifos[i], 
-                    inB_fifos[i],
+                    memB_fifos[col], 
+                    inB_fifos[col],
                     )#
 
             # Set up compute tiles
             for row in range(n_rows):
-                for i in range(n_cores):
-                # Compute tile i
-                    @core(cores[row][i], f"mv_{m}x{k}.o")
+                for col in range(n_cols):
+                # Compute tile col
+                    @core(cores[row][col], f"mv_{m}x{k}.o")
                     def core_body():
                         for _ in range_(0xFFFFFFFF):
-                            elem_out = outC_fifos[row][i].acquire(
+                            elem_out = outC_fifos[row][col].acquire(
                                 ObjectFifoPort.Produce,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                                 1,
                             )
                             zero(elem_out)
                             
                             for _ in range_(K_div_k):
-                                elem_in_a = inA_fifos[row][i].acquire(ObjectFifoPort.Consume, 1)
-                                elem_in_b = inB_fifos[i].acquire(ObjectFifoPort.Consume, 1)
+                                elem_in_a = inA_fifos[row][col].acquire(ObjectFifoPort.Consume, 1)
+                                elem_in_b = inB_fifos[col].acquire(ObjectFifoPort.Consume, 1)
                                 matvec(elem_in_a, elem_in_b, elem_out)
-                                inA_fifos[row][i].release(ObjectFifoPort.Consume, 1)
-                                inB_fifos[i].release(ObjectFifoPort.Consume, 1)
+                                inA_fifos[row][col].release(ObjectFifoPort.Consume, 1)
+                                inB_fifos[col].release(ObjectFifoPort.Consume, 1)
 
-                            outC_fifos[row][i].release(ObjectFifoPort.Produce, 1)
+                            outC_fifos[row][col].release(ObjectFifoPort.Produce, 1)
 
             # To/from AIE-array data movement
 
@@ -188,45 +188,46 @@ def my_matmul(dev, M, K):
                 np.ndarray[(C_sz,), dtype_out],
             )
             def sequence(A, B, C):
-                num_iter = M//m// n_cores// n_rows
-                for j in range(num_iter):
-                    for i in range(n_cores):
-                        B_size3 = M_div_m_div_n_cores// n_rows// num_iter
+                for pingpong in [0,1]:
+                    bd_id_base = 8 * pingpong
+                    for col in range(n_cols):
+                        B_size3 = M_div_m_div_n_cols// n_cols// 2
                         npu_dma_memcpy_nd(
-                            metadata=memB_fifos[i],
-                            bd_id=1,
+                            metadata=memB_fifos[col],
+                            bd_id=bd_id_base + 2,
                             mem=B,
                             sizes=[B_size3, 1, 1, K],
                             strides=[0, 0, 0, 1],
                         )
-                    for i in range(n_cores):
-                        for j in range(n_rows):
-                            A_offset = (i) * M_div_m_div_n_cores * m * K//num_iter  +j*K*m       
-                            # A_sizes = [K_div_k , 1, m, k]
-                            # A_strides = [k,m_x_K, K, 1]
-                            A_sizes = [1 ,K_div_k, m, k]
-                            A_strides = [m_x_K, k, K, 1]
-                            npu_dma_memcpy_nd(
-                                    metadata=memA_fifos[i],
-                                    bd_id=2 + j ,
-                                    mem=A,
-                                    offsets=[0, 0, 0, A_offset],
-                                    sizes=A_sizes,
-                                    strides=A_strides,
-                                )
-                    for i in range(n_cores):
-                        C_offset = i * M // n_cores//num_iter +j*M//num_iter
-                        C_size0 = C_sz_div_n_cores//num_iter
+                        A_pingpong_offset = pingpong * K * M // 2
+                        A_col_offset = (col) * M_div_m_div_n_cols * m * K//2
+                        A_offset = A_col_offset + A_pingpong_offset
+                        A_sizes = [1, K_div_k, n_rows * m, k]
+                        A_strides = [0, k, K, 1]
                         npu_dma_memcpy_nd(
-                            metadata=memC_fifos[i],
-                            bd_id=0,
+                                metadata=memA_fifos[col],
+                                bd_id=bd_id_base + 1,
+                                mem=A,
+                                offsets=[0, 0, 0, A_offset],
+                                sizes=A_sizes,
+                                strides=A_strides,
+                            )
+                    for col in range(n_cols):
+                        C_pingpong_offset = pingpong * M // 2
+                        C_col_offset = (col) * M_div_m_div_n_cols * m // 2
+                        C_offset = C_col_offset + C_pingpong_offset
+                        C_size0 = C_sz_div_n_cols//2
+                        npu_dma_memcpy_nd(
+                            metadata=memC_fifos[col],
+                            bd_id=bd_id_base + 0,
                             mem=C,
                             offsets=[0, 0, 0, C_offset],
                             sizes=[1, 1, 1, C_size0],
                             strides=[0, 0, 0, 1],
                         )
                         
-                    dma_wait(*[memC_fifos[i] for i in range(n_cores)])
+                dma_wait(*memC_fifos)
+                # dma_wait(*memC_fifos)
 
     print(ctx.module)
 
