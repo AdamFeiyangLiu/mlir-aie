@@ -13,6 +13,9 @@ from aie.dialects.aiex import *
 from aie.helpers.dialects.ext.scf import _for as range_
 
 
+def ceildiv(a, b):
+    return (a + b - 1) // b
+
 def my_matmul(dev, M, K):
     # M = 288
     # K = 288
@@ -20,7 +23,9 @@ def my_matmul(dev, M, K):
     m = 32
     k = 32
 
-    n_cores = 4
+    n_aie_rows = 1
+    n_aie_cols = 4
+    n_cores = n_aie_rows * n_aie_cols
 
     A_sz = M * K
     B_sz = K
@@ -149,36 +154,46 @@ def my_matmul(dev, M, K):
                 np.ndarray[(C_sz,), dtype_out],
             )
             def sequence(A, B, C):
-                npu_dma_memcpy_nd(
-                    metadata=inB_fifo,
-                    bd_id=1,
-                    mem=B,
-                    sizes=[M_div_m_div_n_cores, 1, 1, K],
-                    strides=[0, 0, 0, 1],
-                )
-                for i in range(n_cores):
-                    
-                    C_offset = i * M_div_m_div_n_cores * m
-                    for pingpong in [0, 1]:
-                        A_offset = i * M_div_m_div_n_cores * m * K + pingpong*m*K*2
-                        A_sizes = [M_div_m_div_n_cores//2, K_div_k, m, k]
+                # for tb in 
+                for pingpong in [0,1]:
+                    bd_id_base = 8 * pingpong
+                    B_size3 = M_div_m_div_n_cores // 2
+                    npu_dma_memcpy_nd(
+                        metadata=inB_fifo,
+                        bd_id=bd_id_base,
+                        mem=B,
+                        sizes=[B_size3, 1, 1, K],
+                        strides=[0, 0, 0, 1],
+                    )                    
+                    C_pingpong_offset = pingpong * M // 2 
+                    A_pingpong_offset = pingpong * M *K //2
+                    for i in range(n_cores):
+
+                        C_offset = i * M//2//n_cores + C_pingpong_offset
+                        C_sizes = M//n_cores// 2
+                        npu_dma_memcpy_nd(
+                            metadata=outC_fifos[i],
+                            bd_id=bd_id_base + 1 ,
+                            mem=C,
+                            offsets=[0, 0, 0, C_offset],
+                            sizes=[1, 1, 1, C_sizes],
+                            strides=[0,0,0,1],
+                        )
+                        A_offset = i * M*K//2//n_cores + A_pingpong_offset
+                        A_sizes = [M//m//n_cores//2,K_div_k,m,k]
+                        A_strides = [ m_x_K,k,K,1]
                         npu_dma_memcpy_nd(
                             metadata=memA_fifos[i],
-                            bd_id=2 + pingpong + i*2,
+                            bd_id=bd_id_base +2,
                             mem=A,
                             offsets=[0, 0, 0, A_offset],
                             sizes=A_sizes,
-                            strides=[m_x_K, k, K, 1],
+                            strides=A_strides,
                         )
-                    npu_dma_memcpy_nd(
-                        metadata=outC_fifos[i],
-                        bd_id=0,
-                        mem=C,
-                        offsets=[0, 0, 0, C_offset],
-                        sizes=[1, 1, 1, C_sz_div_n_cores],
-                        strides=[0, 0, 0, 1],
-                    )
+                    # dma_wait(*outC_fifos)
                 dma_wait(*outC_fifos)
+                dma_wait(*outC_fifos)
+
 
     print(ctx.module)
 

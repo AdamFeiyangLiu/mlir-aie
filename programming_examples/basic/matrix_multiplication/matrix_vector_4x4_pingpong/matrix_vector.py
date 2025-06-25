@@ -21,7 +21,7 @@ def my_matmul(dev, M, K):
     k = 32
 
     n_cols = 4
-    n_rows = 4
+    n_rows = 4 
 
     A_sz = M * K
     B_sz = K
@@ -55,9 +55,9 @@ def my_matmul(dev, M, K):
 
         @device(dev_ty)
         def device_body():
-            inA_ty = np.ndarray[(m * k * n_rows,), dtype_in]
+            inA_ty = np.ndarray[(m * k * 4,), dtype_in]
             inB_ty = np.ndarray[(k,), dtype_in]
-            MemC_ty = np.ndarray[(m * n_rows,), dtype_out]
+            MemC_ty = np.ndarray[(m * 4,), dtype_out]
             outC_ty = np.ndarray[(m,), dtype_out]
             A_ty = np.ndarray[(m, k), dtype_in]
 
@@ -104,7 +104,7 @@ def my_matmul(dev, M, K):
                             f"inA{row}{col}",
                             MemTiles[col],
                             cores[row][col],
-                            2,
+                            4,
                             A_ty,
                             (
                                 [
@@ -188,47 +188,49 @@ def my_matmul(dev, M, K):
                 np.ndarray[(C_sz,), dtype_out],
             )
             def sequence(A, B, C):
-                for pingpong in [0,1]:
-                    bd_id_base = 8 * pingpong
-                    for col in range(n_cols):
-                        B_size3 = M_div_m_div_n_cols// n_cols// 2
-                        npu_dma_memcpy_nd(
-                            metadata=memB_fifos[col],
-                            bd_id=bd_id_base + 2,
-                            mem=B,
-                            sizes=[B_size3, 1, 1, K],
-                            strides=[0, 0, 0, 1],
-                        )
-                        A_pingpong_offset = pingpong * K * M // 2
-                        A_col_offset = (col) * M_div_m_div_n_cols * m * K//2
-                        A_offset = A_col_offset + A_pingpong_offset
-                        A_sizes = [1, K_div_k, n_rows * m, k]
-                        A_strides = [0, k, K, 1]
-                        npu_dma_memcpy_nd(
-                                metadata=memA_fifos[col],
-                                bd_id=bd_id_base + 1,
-                                mem=A,
-                                offsets=[0, 0, 0, A_offset],
-                                sizes=A_sizes,
-                                strides=A_strides,
-                            )
-                    for col in range(n_cols):
-                        C_pingpong_offset = pingpong * M // 2
-                        C_col_offset = (col) * M_div_m_div_n_cols * m // 2
-                        C_offset = C_col_offset + C_pingpong_offset
-                        C_size0 = C_sz_div_n_cols//2
-                        npu_dma_memcpy_nd(
-                            metadata=memC_fifos[col],
-                            bd_id=bd_id_base + 0,
-                            mem=C,
-                            offsets=[0, 0, 0, C_offset],
-                            sizes=[1, 1, 1, C_size0],
-                            strides=[0, 0, 0, 1],
-                        )
-                        
-                dma_wait(*memC_fifos)
-                # dma_wait(*memC_fifos)
 
+
+
+                num_iter = M_div_m_div_n_cols // n_rows // 2
+                for j in range(num_iter):
+                    for pingpong in [0,1]:
+                        bd_id_base = 8 * pingpong
+                        for col in range(n_cols):
+                            npu_dma_memcpy_nd(
+                                metadata=memB_fifos[col],
+                                bd_id=bd_id_base + 2,
+                                mem=B,
+                                sizes=[1, 1, 1, K],
+                                strides=[0, 0, 0, 1],
+                            )
+                            A_base_offset =  j * K * M // num_iter + pingpong * K * M // num_iter // 2
+                            A_col_offset = col * K * M // num_iter // 2 // n_cols
+                            A_offset = A_base_offset + A_col_offset
+                            A_sizes = [1, K_div_k, n_rows * m, k]
+                            A_strides = [0, k, K, 1]
+                            npu_dma_memcpy_nd(
+                                    metadata=memA_fifos[col],
+                                    bd_id=bd_id_base + 1,
+                                    mem=A,
+                                    offsets=[0, 0, 0, A_offset],
+                                    sizes=A_sizes,
+                                    strides=A_strides,
+                                )
+                            C_base_offset =  j * M // num_iter + pingpong * M // num_iter // 2
+                            C_col_offset = col * M // num_iter // 2 // n_cols
+                            C_offset = C_base_offset + C_col_offset
+                            C_size0 = C_sz_div_n_cols//num_iter//2
+                            npu_dma_memcpy_nd(
+                                metadata=memC_fifos[col],
+                                bd_id=bd_id_base,
+                                mem=C,
+                                offsets=[0, 0, 0, C_offset],
+                                sizes=[1, 1, 1, C_size0],
+                                strides=[0, 0, 0, 1],
+                            )
+                        if j > 0 or (j == 0 and pingpong > 0):
+                            dma_wait(*memC_fifos)
+                dma_wait(*memC_fifos)
     print(ctx.module)
 
 if __name__ == "__main__":

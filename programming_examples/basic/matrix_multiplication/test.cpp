@@ -168,10 +168,10 @@ int main(int argc, const char *argv[]) {
   B_DATATYPE *bufB = bo_b.map<B_DATATYPE *>();
   std::vector<B_DATATYPE> BVec(B_VOLUME);
   for (int i = 0; i < B_VOLUME; i++) {
-    BVec[i] = matmul_common::get_random<B_DATATYPE>();
-    Diagonal:
+    // BVec[i] = matmul_common::get_random<B_DATATYPE>();
+    // Diagonal:
     // if(i % N == i / N) {
-    //   BVec[i] = 1.0;
+    BVec[i] = 1.0;
     // } else {
     //   BVec[i] = 0;
     // }
@@ -240,18 +240,18 @@ int main(int argc, const char *argv[]) {
       /* Warmup iterations do not count towards average runtime. */
       continue;
     }
-    // C_DATATYPE *bufC = bo_out.map<C_DATATYPE *>();
-    // std::ofstream outFile("output_matrixC.csv");
-    // if (!outFile) {
-    //       std::cerr << "Error: Unable to open file for writing output matrix.\n";
-    //       return -1;
-    //   }
-    //   for (int i = 0; i < M; i++) {
-    //         for (int j = 0; j < N; j++) {
-    //             outFile << bufC[i * N + j] << ",";
-    //         }
-    //         outFile << "\n";
-    //     }
+    C_DATATYPE *bufC = bo_out.map<C_DATATYPE *>();
+    std::ofstream outFile("output_matrixC.csv");
+    if (!outFile) {
+          std::cerr << "Error: Unable to open file for writing output matrix.\n";
+          return -1;
+      }
+      for (int i = 0; i < M; i++) {
+            for (int j = 0; j < N; j++) {
+                outFile << bufC[i * N + j] << ",";
+            }
+            outFile << "\n";
+        }
     if (do_verify) {
       memcpy(CVec.data(), bufOut, (CVec.size() * sizeof(C_DATATYPE)));
       if (verbosity >= 1) {
