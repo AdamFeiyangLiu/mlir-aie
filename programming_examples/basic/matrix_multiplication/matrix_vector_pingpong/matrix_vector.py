@@ -24,15 +24,12 @@ dtype_map = {
 def ceildiv(a, b):
     return (a + b - 1) // b
 
-def my_matmul(dev, M, K, dtype_in_str, dtype_out_str):
-    # M = 288
-    # K = 288
- 
+def my_matmul(dev, M, K, dtype_in_str, dtype_out_str, n_aie_cols):
+    
     m = 32
     k = 32
 
     n_aie_rows = 1
-    n_aie_cols = 4
     n_cores = n_aie_rows * n_aie_cols
 
     A_sz = M * K
@@ -74,23 +71,13 @@ def my_matmul(dev, M, K, dtype_in_str, dtype_out_str):
                 f"matvec_{func_type}_{dtype_in_str}_{dtype_out_str}",
                 inputs=[A_ty, inB_ty, outC_ty],
             )
-
+            tiles = [
+                [tile(col, row) for col in range(0, n_aie_cols)] for row in range(0, 6)
+            ]
             # Tile declarations
-            ShimTile0 = tile(0, 0)
-            ShimTile1 = tile(1, 0)
-            ShimTile2 = tile(2, 0)
-            ShimTile3 = tile(3, 0)
-            ShimTiles = [ShimTile0, ShimTile1, ShimTile2, ShimTile3]
-            MemTile0 = tile(0, 1)
-            MemTile1 = tile(1, 1)
-            MemTile2 = tile(2, 1)
-            MemTile3 = tile(3, 1)
-            MemTiles = [MemTile0, MemTile1, MemTile2, MemTile3]
-            ComputeTile0 = tile(0, 2)
-            ComputeTile1 = tile(1, 2)
-            ComputeTile2 = tile(2, 2)
-            ComputeTile3 = tile(3, 2)
-            cores = [ComputeTile0, ComputeTile1, ComputeTile2, ComputeTile3]
+            ShimTiles = tiles[0]
+            MemTiles = tiles[1]
+            cores = tiles[2]
             memA_fifos = []
             inA_fifos = []
             outC_fifos = []
@@ -220,6 +207,7 @@ if __name__ == "__main__":
         choices=["bf16", "i8", "i16", "f32", "i32"],
         default="f32",
     )
+    argparser.add_argument("--n-aie-cols", type=int, choices=[1, 2, 4, 8], default=4)
 
     args, _ = argparser.parse_known_args()  # <- ignore the rest args in makefile-common
-    my_matmul(args.dev, args.M, args.K, args.dtype_in, args.dtype_out)
+    my_matmul(args.dev, args.M, args.K, args.dtype_in, args.dtype_out, args.n_aie_cols)

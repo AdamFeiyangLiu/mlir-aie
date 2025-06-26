@@ -19,7 +19,10 @@ N=1
 m=32
 k=32
 
+n_aie_cols?=8
+
 kernels=mv_${m}x${k}
+aieargs += --n-aie-cols ${n_aie_cols}
 use_placed?=0
 use_iron?=0
 
