@@ -13,8 +13,8 @@ targetname=matrix_vector
 
 # Currently does not accept reconfiguring size via these variables; must change
 # in source at <targetname>.py as well as here
-M?=14336
-K?=4096
+M?=2048
+K?=2048
 N=1
 m=32
 k=32

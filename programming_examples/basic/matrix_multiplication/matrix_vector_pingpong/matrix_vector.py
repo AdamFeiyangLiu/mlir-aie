@@ -6,17 +6,25 @@
 # (c) Copyright 2025 AMD Inc.
 import numpy as np
 import argparse
+from ml_dtypes import bfloat16
 
 from aie.extras.context import mlir_mod_ctx
 from aie.dialects.aie import *
 from aie.dialects.aiex import *
 from aie.helpers.dialects.ext.scf import _for as range_
 
+dtype_map = {
+    "bf16": bfloat16,
+    "i8": np.int8,
+    "i16": np.int16,
+    "f32": np.float32,
+    "i32": np.int32,
+}
 
 def ceildiv(a, b):
     return (a + b - 1) // b
 
-def my_matmul(dev, M, K):
+def my_matmul(dev, M, K, dtype_in_str, dtype_out_str):
     # M = 288
     # K = 288
  
@@ -42,10 +50,8 @@ def my_matmul(dev, M, K):
     # FIXME vectorized kernel is currently erroneous
     vectorized = True
 
-    dtype_in = np.dtype[np.int16]
-    dtype_in_str = "i16"
-    dtype_out = np.dtype[np.int32]
-    dtype_out_str = "i32"
+    dtype_in = np.dtype[dtype_map[dtype_in_str]]
+    dtype_out = np.dtype[dtype_map[dtype_out_str]]
 
     with mlir_mod_ctx() as ctx:
 
@@ -205,8 +211,15 @@ if __name__ == "__main__":
     argparser.add_argument("--dev", type=str, choices=["npu", "npu2"], default="npu")
     argparser.add_argument("-M", type=int, default=256)
     argparser.add_argument("-K", type=int, default=256)
+    argparser.add_argument(
+        "--dtype_in", type=str, choices=["bf16", "i8", "i16"], default="bf16"
+    )
+    argparser.add_argument(
+        "--dtype_out",
+        type=str,
+        choices=["bf16", "i8", "i16", "f32", "i32"],
+        default="f32",
+    )
+
     args, _ = argparser.parse_known_args()  # <- ignore the rest args in makefile-common
-    dev = args.dev
-    M = args.M
-    K = args.K
-    my_matmul(dev, M, K)
+    my_matmul(args.dev, args.M, args.K, args.dtype_in, args.dtype_out)
