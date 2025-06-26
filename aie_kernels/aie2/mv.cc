@@ -127,11 +127,6 @@ void matvec_vectorized(T_in *__restrict a, T_in *__restrict b,
     a_ptr += 6 * m; // Move to next 8 columns of A.
     b_ptr += s;     // Move to next s (==8) rows of b.
   }
-  // //stall, make sure not optimized out
-  // volatile int dummy = 0;
-  // for (int i = 0; i < 10000; i++) {
-  //   dummy += i;
-  // }
   event1();
 }
 
