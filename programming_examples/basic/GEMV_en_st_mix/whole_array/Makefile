@@ -13,20 +13,20 @@ targetname=whole_array
 
 
 # M, K, N: final GEMM dimensions
-M?=512
-K?=512
-N?=512
+M?=14336
+K?=4096
+N=1
 
 # m, k, n: single AIE core GEMM dimensions
 m?=32
 k?=32
-n?=32
+n?=1
 
-n_aie_cols?=4
+n_aie_cols?=8
 b_col_maj?=0
 c_col_maj?=0
 
-kernels=mm_${m}x${k}x${n}
+kernels=mv_${m}x${k}
 aieargs+=-m $m -k $k -n $n --n-aie-cols ${n_aie_cols} --b-col-maj ${b_col_maj} 
 runargs+=--b_col_maj ${b_col_maj} 
 target_suffix=${M}x${K}x${N}_${m}x${k}x${n}_${n_aie_cols}c
@@ -76,6 +76,7 @@ endif
 
 include ${srcdir}/../makefile-common
 
-build/mm_${m}x${k}x${n}.o: ${kernels_dir}/mm.cc
+kernels_dir=${srcdir}/../../../../aie_kernels/aie2
+build/mv_${m}x${k}.o: ${kernels_dir}/mv.cc
 	mkdir -p ${@D}
 	cd ${@D} && ${KERNEL_CC} ${KERNEL_CFLAGS} ${KERNEL_DEFINES} -c $< -o ${@F}
