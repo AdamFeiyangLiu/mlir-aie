@@ -30,7 +30,7 @@ def main():
     argparser.add_argument("-K", type=int, default=512)
     argparser.add_argument("-N", type=int, default=1)
     argparser.add_argument("-m", type=int, default=64)
-    argparser.add_argument("-k", type=int, default=64)
+    argparser.add_argument("-k", type=int, default=16)
     argparser.add_argument("-n", type=int, default=32)
     argparser.add_argument("--n-aie-cols", type=int, choices=[1, 2, 4, 8], default=4)
     argparser.add_argument("--b-col-maj", type=int, choices=[0, 1], default=0)
@@ -65,7 +65,7 @@ def main():
             args.k,
             args.n,
             args.n_aie_cols,
-            args.dtype_in,
+            args.dtype_in,  
             args.dtype_out,
             args.b_col_maj,
             args.c_col_maj,
@@ -103,7 +103,7 @@ def my_matmul(
     trace_size,
     generate_taps=False,
 ):
-    n_aie_rows = 4
+    n_aie_rows = 1
     n_aie_cores = n_aie_rows * n_aie_cols
 
     dtype_in = str_to_dtype(dtype_in_str)
@@ -165,10 +165,10 @@ def my_matmul(
     mtk_div_k = mtk // k
     @device(dev_ty)
     def device_body():
-        A_l2_ty = np.ndarray[(m* mtk_div_k *4,k), np.dtype[dtype_in]]
-        C_l2_ty = np.ndarray[(m * 4,), np.dtype[dtype_out]]
-        A_l1_ty = np.ndarray[(m, k), np.dtype[dtype_in]]
-        B_l1_ty = np.ndarray[(k,), np.dtype[dtype_in]]
+        A_l2_ty = np.ndarray[(m*n_aie_rows*mtk,), np.dtype[dtype_in]]
+        C_l2_ty = np.ndarray[(m * n_aie_rows,), np.dtype[dtype_out]]
+        A_l1_ty = np.ndarray[(m* mtk,), np.dtype[dtype_in]]
+        B_l1_ty = np.ndarray[(mtk,), np.dtype[dtype_in]]
         C_l1_ty = np.ndarray[(m,), np.dtype[dtype_out]]
 
         # AIE Core Function declarations
@@ -206,15 +206,15 @@ def my_matmul(
                 mem_tiles[i],
                 fifo_depth,
                 A_l2_ty,
-                None, #MM2S
+                None, #MM2S 
                         #S2MM
-                [
-                    [
-                        (m, k),
-                        (mtk // k, m * k),
-                        (k, 1),
-                    ]
-                ],
+                # [
+                #     [
+                #         (m, k),
+                #         (mtk // k, m * k),
+                #         (k, 1),
+                #     ]
+                # ],
             )
 
         # L2 -> L1 data movement
@@ -229,11 +229,11 @@ def my_matmul(
                         #MM2S
                         # None,
                         # [
-                            # [   
-                            #     (k  // 2, 2),
-                            #     (m, k),
-                            #     (2, 1),
-                            # ]
+                        #     [   
+                        #         (k  // 2, 2),
+                        #         (m, k),
+                        #         (2, 1),
+                        #     ]
                         # ]
                     )
             object_fifo_link(A_l3l2_fifos[col], [A_l2l1_fifos[row][col] for row in range(n_aie_rows)],[],[m*mtk*j for j in range(n_aie_rows)])#
@@ -300,7 +300,7 @@ def my_matmul(
                         )
                         zero(elem_out)
 
-                        for _ in range_(K // k):
+                        for _ in range_(K // mtk):
                             elem_in_a = A_l2l1_fifos[row][col].acquire(
                                 ObjectFifoPort.Consume, 1
                             )

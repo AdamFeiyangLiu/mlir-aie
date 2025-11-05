@@ -161,20 +161,18 @@ int main(int argc, const char *argv[]) {
   A_DATATYPE *bufA = bo_a.map<A_DATATYPE *>();
   std::vector<A_DATATYPE> AVec(A_VOLUME);
   for (int i = 0; i < A_VOLUME; i++) {
-    // AVec[i] = matmul_common::get_random<A_DATATYPE>();
-    AVec[i] = 1;
+    AVec[i] = matmul_common::get_random<A_DATATYPE>();
+    // AVec[i] = i;
   }
   memcpy(bufA, AVec.data(), (AVec.size() * sizeof(A_DATATYPE)));
   B_DATATYPE *bufB = bo_b.map<B_DATATYPE *>();
   std::vector<B_DATATYPE> BVec(B_VOLUME);
   for (int i = 0; i < B_VOLUME; i++) {
-    // BVec[i] = matmul_common::get_random<B_DATATYPE>() * i;
-    Diagonal:
-    if(i % N == i / N) {
-      BVec[i] = 1;
-    } else {
-      BVec[i] = 0;
-    }
+    BVec[i] = matmul_common::get_random<B_DATATYPE>() * i;
+    // Diagonal:
+    // if(i==62) BVec[i] = 1;
+    // else BVec[i] = 0;
+    
   }
   memcpy(bufB, BVec.data(), (BVec.size() * sizeof(B_DATATYPE)));
 
@@ -241,7 +239,7 @@ int main(int argc, const char *argv[]) {
       continue;
     }
 
-    if (do_verify) {
+    if (1) {
       memcpy(CVec.data(), bufOut, (CVec.size() * sizeof(C_DATATYPE)));
       if (verbosity >= 1) {
         if (do_verify_stochastic) {
@@ -288,6 +286,27 @@ int main(int argc, const char *argv[]) {
   if (trace_size > 0) {
     matmul_common::write_out_trace((char *)bufTrace, trace_size,
                                    vm["trace_file"].as<std::string>());
+  }
+
+  // Output C matrix to CSV file
+  {
+    std::ofstream csv_file("C_matrix.csv");
+    if (!csv_file) {
+      std::cerr << "Failed to open C_matrix.csv for writing." << std::endl;
+    } else {
+      for (int i = 0; i < M; ++i) {
+        for (int j = 0; j < N; ++j) {
+          csv_file << CVec[i * N + j];
+          if (j < N - 1)
+            csv_file << ",";
+        }
+        csv_file << "\n";
+      }
+      csv_file.close();
+      if (verbosity >= 1) {
+        std::cout << "C matrix written to C_matrix.csv" << std::endl;
+      }
+    }
   }
 
   std::cout << std::endl

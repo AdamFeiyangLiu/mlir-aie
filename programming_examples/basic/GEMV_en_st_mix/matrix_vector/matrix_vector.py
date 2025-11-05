@@ -14,20 +14,18 @@ from aie.helpers.dialects.ext.scf import _for as range_
 from aie.helpers.taplib import TensorAccessPattern, TensorAccessSequence
 
 def my_matmul(dev, M, K):
-    # M = 288
-    # K = 288
  
     m = 32
     k = 32
-    mtk = 512
+    mtk = 1024
     mtk_div_k = mtk // k 
 
-    n_cols = 4
-    n_rows = 4 
+    n_cols = 8
+    n_rows = 1 
 
     A_sz = M * K
     B_sz = K
-    C_sz = M
+    C_sz = M 
     C_sz_div_n_cols = C_sz // n_cols 
 
     M_div_m = M // m
@@ -57,12 +55,11 @@ def my_matmul(dev, M, K):
 
         @device(dev_ty)
         def device_body():
-            inA_ty = np.ndarray[(m* mtk_div_k *4,k), dtype_in]
+            inA_ty = np.ndarray[(m* mtk_div_k *n_rows,k), dtype_in]
             inB_ty = np.ndarray[(k,), dtype_in]
-            MemC_ty = np.ndarray[(m * 4,), dtype_out]
+            MemC_ty = np.ndarray[(m * n_rows,), dtype_out]
             outC_ty = np.ndarray[(m,), dtype_out]
             A_ty = np.ndarray[(m, k), dtype_in]
-
             # AIE Core Function declarations
             func_type = "vectorized" if vectorized else "scalar"
             zero = external_func(f"zero_{func_type}_{dtype_out_str}", inputs=[outC_ty])
@@ -80,10 +77,6 @@ def my_matmul(dev, M, K):
             inB_fifos = [None] * n_cols
             memB_fifos = []
             memC_fifos = []
-            # tiles = [
-            #     [tile(col, row) for col in range(0, n_cols)] for row in range(0, 6)
-            # ]
-            # cores = tiles[2:]
             cores = [
                 [tile(col, row) for col in range(0, n_cols)] for row in range(2, 2 + n_rows)
             ]
@@ -101,14 +94,15 @@ def my_matmul(dev, M, K):
                     None,
                     # S2MM in MemTile to convert m * mtk block from row-maj
                     # to tiled m*k blocks
-                    # [
-                    #     [
-                    #         (m, k),
-                    #         (mtk // k, m * k),
-                    #         (k, 1),
-                    #     ]
+                    
+                    [
+                        [
+                            (m, k),
+                            (mtk // k, m * k),
+                            (k, 1),
+                        ]
                        
-                    # ],
+                    ],
             )
             for col in range(n_cols):
                 for row in range(n_rows):
@@ -121,11 +115,13 @@ def my_matmul(dev, M, K):
                             #MM2S
                             # None,
                             
-                                [   
-                                    (k  // 2, 2),
-                                    (m, k),
-                                    (2, 1),
-                                ]
+                            [   
+                                
+                                (mtk_div_k,m*k),
+                                (k  // 2, 2),
+                                (m, k),
+                                (2, 1),
+                            ]
                             
                         )
                 

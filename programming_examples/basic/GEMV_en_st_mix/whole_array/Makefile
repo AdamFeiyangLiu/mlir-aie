@@ -13,12 +13,12 @@ targetname=whole_array
 
 
 # M, K, N: final GEMM dimensions
-M?=14336
+M?=4096
 K?=4096
 N=1
 
 # m, k, n: single AIE core GEMM dimensions
-m?=32
+m?=16
 k?=32
 n?=1
 
